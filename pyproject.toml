@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "douze"
-version = "0.1.0"
+version = "0.1.1"
 description = "A DigitalOcean API client to help with 12-factors apps"
 authors = ["Rémy Sanchez <remy.sanchez@hyperthese.net>"]
 license = "WTFPL"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.7"

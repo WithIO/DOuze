@@ -253,6 +253,7 @@ class DoIdemApi:
         nodes: int,
         version: PostgreSqlVersion = DEFAULT_PSQL_VERSION,
         private_network: Optional[Uuid] = None,
+        skip_checks: bool = False,
     ) -> Outcome:
         """
         Makes sure that this cluster exists. If the existing cluster doesn't
@@ -277,6 +278,8 @@ class DoIdemApi:
             ID of the private network to connect this cluster to. If not
             specified, it will get connected to the default network for this
             region.
+        skip_checks
+            Don't check that existing clusters match specifications
         """
 
         cluster = self._find_cluster_by_name(name)
@@ -312,14 +315,15 @@ class DoIdemApi:
         if cluster.status != DatabaseStatus.online:
             raise IdemApiError("Cluster failed to come online")
 
-        if cluster.size != size:
-            raise IdemApiError("Existing cluster does not have the right size")
+        if not skip_checks:
+            if cluster.size != size:
+                raise IdemApiError("Existing cluster does not have the right size")
 
-        if cluster.region != region:
-            raise IdemApiError("Existing cluster is not in the right region")
+            if cluster.region != region:
+                raise IdemApiError("Existing cluster is not in the right region")
 
-        if cluster.num_nodes != nodes:
-            raise IdemApiError("Existing cluster does not have the right nodes number")
+            if cluster.num_nodes != nodes:
+                raise IdemApiError("Existing cluster does not have the right nodes number")
 
         self._cluster_cache[cluster.name] = cluster
 

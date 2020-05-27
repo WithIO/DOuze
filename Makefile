@@ -10,4 +10,4 @@ isort:
 	$(PYTHON_BIN) -m isort -rc src
 
 publish:
-	poetry publish --build --repository with
+	poetry publish --build
