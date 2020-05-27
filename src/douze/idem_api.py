@@ -237,7 +237,7 @@ class DoIdemApi:
             raise IdemApiError(f"Droplets not found: {droplet_names!r}")
 
         return self.db_firewall_rule(
-            cluster.id,
+            cluster.name,
             [
                 DatabaseFirewallRuleCreate(DbFirewallRuleType.droplet, f"{x}")
                 for x in droplet_ids
