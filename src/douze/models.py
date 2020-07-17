@@ -65,6 +65,7 @@ class DatabaseEngine(Enum):
 class PostgreSqlVersion(Enum):
     v10 = "10"
     v11 = "11"
+    v12 = "12"
 
 
 class MySqlVersion(Enum):

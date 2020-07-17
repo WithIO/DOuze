@@ -2,7 +2,7 @@ from logging import getLogger
 from os import getenv
 from typing import Any, Callable, Iterator, List, Optional, Text, Union
 
-from httpx import HTTPError
+from httpx import HTTPError, Timeout
 from typefit import api
 from typefit import httpx_models as hm
 
@@ -18,6 +18,7 @@ class DoApi(api.SyncClient):
     def __init__(self, api_token: Text = getenv("DO_API_TOKEN", "")):
         super().__init__()
         self.api_token = api_token
+        self.helper.http.timeout = Timeout(30.0)
 
     def init_serialize(self) -> Callable[[Any], Any]:
         """

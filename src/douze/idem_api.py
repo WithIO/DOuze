@@ -450,14 +450,15 @@ class DoIdemApi:
                 cluster.id, DatabaseUserCreate(name=user_name)
             )
 
-            ret = subprocess.run(
-                ["psql", *cluster.connection.pg_flags(db_name)],
-                env={**environ, **cluster.connection.pg_env},
-                capture_output=True,
-                input=f'reassign owned by "{cluster.connection.user}" to "{user_name}"'.encode(
-                    "utf-8"
-                ),
-            )
+            with self._allow_self_access(cluster.name):
+                ret = subprocess.run(
+                    ["psql", *cluster.connection.pg_flags(db_name)],
+                    env={**environ, **cluster.connection.pg_env},
+                    capture_output=True,
+                    input=f'reassign owned by "{cluster.connection.user}" to "{user_name}"'.encode(
+                        "utf-8"
+                    ),
+                )
 
             if ret.returncode:
                 raise IdemApiError(
