@@ -137,9 +137,19 @@ class DoApi(api.SyncClient):
     def db_cluster_list(self) -> Iterator[DatabaseCluster]:
         """
         Lists all database clusters present on the account
+
+        Notes
+        -----
+        Since new versions of DB engines get added and so forth, we don't want
+        to avoid a crash in case things are not fit. That's why the databases
+        attributes also allows to not fit. Here we're checking that we're
+        returning only the instances that are indeed recognized. The other ones
+        are just ignored.
         """
 
-        yield from self._iterate_collection(self._db_cluster_list, "databases")
+        for cluster in self._iterate_collection(self._db_cluster_list, "databases"):
+            if isinstance(cluster, DatabaseCluster):
+                yield cluster
 
     @api.post("databases", json=lambda cluster: cluster, hint="database")
     def db_cluster_create(self, cluster: DatabaseClusterCreate) -> DatabaseCluster:

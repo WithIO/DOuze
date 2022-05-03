@@ -323,14 +323,19 @@ class DoIdemApi:
                 raise IdemApiError("Existing cluster is not in the right region")
 
             if cluster.num_nodes != nodes:
-                raise IdemApiError("Existing cluster does not have the right nodes number")
+                raise IdemApiError(
+                    "Existing cluster does not have the right nodes number"
+                )
 
         self._cluster_cache[cluster.name] = cluster
 
         return Outcome(changed)
 
     def psql_database(
-        self, cluster_name: Text, name: Text, copy_db_name: Text = "",
+        self,
+        cluster_name: Text,
+        name: Text,
+        copy_db_name: Text = "",
     ) -> Outcome:
         """
         Makes sure that this database exists. If the copy_db_name is specified,
@@ -407,7 +412,11 @@ class DoIdemApi:
         return Outcome(changed)
 
     def psql_user(
-        self, cluster_name: Text, user_name: Text, db_name: Text, pool_size: int = 1,
+        self,
+        cluster_name: Text,
+        user_name: Text,
+        db_name: Text,
+        pool_size: int = 1,
     ):
         """
         Ensures a user which has the rights to access the "db_name" database.
@@ -504,5 +513,8 @@ class DoIdemApi:
 
         return Outcome(
             changed,
-            {"private_connection": private_connection, "connection": connection,},
+            {
+                "private_connection": private_connection,
+                "connection": connection,
+            },
         )
