@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Text, Union
+from typing import Any, List, Optional, Text, Union
 from urllib.parse import quote
 
 from typefit.narrows import DateTime
@@ -66,6 +66,8 @@ class PostgreSqlVersion(Enum):
     v10 = "10"
     v11 = "11"
     v12 = "12"
+    v13 = "13"
+    v14 = "14"
 
 
 class MySqlVersion(Enum):
@@ -74,6 +76,7 @@ class MySqlVersion(Enum):
 
 class RedisVersion(Enum):
     v5 = "5"
+    v6 = "6"
 
 
 class DatabaseUserRole(Enum):
@@ -282,7 +285,7 @@ class Collection:
 
 @dataclass
 class DatabaseClusterCollection(Collection):
-    databases: List[DatabaseCluster] = field(default_factory=list)
+    databases: List[Union[DatabaseCluster, Any]] = field(default_factory=list)
 
 
 @dataclass
