@@ -336,6 +336,7 @@ class DoIdemApi:
         cluster_name: Text,
         name: Text,
         copy_db_name: Text = "",
+        present: bool = True,
     ) -> Outcome:
         """
         Makes sure that this database exists. If the copy_db_name is specified,
@@ -360,6 +361,8 @@ class DoIdemApi:
         copy_db_name
             If creating the DB, copy the content from that other DB (from the
             same cluster)
+        present
+            If False, remove the database from the cluster.
         """
 
         changed = False
@@ -370,12 +373,19 @@ class DoIdemApi:
 
         db = self._find_database_by_name(cluster.id, name)
 
+        if not db and not present:
+            return Outcome(False)
+
         with self._allow_self_access(cluster.name):
             if not db:
                 changed = True
                 self.api.db_database_create(cluster.id, Database(name=name))
+            else:
+                if not present:
+                    changed = True
+                    self.api.db_database_delete(cluster.id, database_name=name)
 
-            if changed and copy_db_name:
+            if changed and copy_db_name and present:
                 with NamedTemporaryFile() as f_info:
                     env = {**environ, **cluster.connection.pg_env}
 
@@ -417,6 +427,7 @@ class DoIdemApi:
         user_name: Text,
         db_name: Text,
         pool_size: int = 1,
+        present: bool = True,
     ):
         """
         Ensures a user which has the rights to access the "db_name" database.
@@ -432,6 +443,8 @@ class DoIdemApi:
         that if a pool was created then the connection settings will be those
         of the pool instead of a direct connection.
 
+        If present is set to False and the user exists, it will be deleted.
+
         Parameters
         ----------
         cluster_name
@@ -443,6 +456,8 @@ class DoIdemApi:
         pool_size
             Size of the connection pool. Put 0 if you don't want any pool to
             be created.
+        present
+            If False, the user will be deleted if present
         """
 
         cluster = self._find_cluster_by_name(cluster_name)
@@ -452,8 +467,12 @@ class DoIdemApi:
         for candidate in self.api.db_user_list(cluster.id):
             if candidate.name == user_name:
                 user = candidate
+                break
 
         if not user:
+            if not present:
+                return Outcome(False)
+
             changed = True
             user = self.api.db_user_create(
                 cluster.id, DatabaseUserCreate(name=user_name)
@@ -473,6 +492,10 @@ class DoIdemApi:
                 raise IdemApiError(
                     f"Error while re-assigning DB tables to user: {ret.stderr[0:1000]}"
                 )
+        else:
+            if not present:
+                changed = True
+                self.api.db_user_delete(cluster.id, user_name=user_name)
 
         pool = None
 
@@ -481,18 +504,25 @@ class DoIdemApi:
                 pool = candidate
                 break
 
+        effective_pool_name = f"user_{user_name}"
         if not pool and pool_size:
+            if present:
+                changed = True
+                pool = self.api.db_pool_create(
+                    cluster.id,
+                    DatabaseConnectionPoolCreate(
+                        name=effective_pool_name,
+                        mode=PgBouncerMode.transaction,
+                        size=pool_size,
+                        db=db_name,
+                        user=user_name,
+                    ),
+                )
+
+        if pool and not present:
             changed = True
-            pool = self.api.db_pool_create(
-                cluster.id,
-                DatabaseConnectionPoolCreate(
-                    name=f"user_{user_name}",
-                    mode=PgBouncerMode.transaction,
-                    size=pool_size,
-                    db=db_name,
-                    user=user_name,
-                ),
-            )
+            self.api.db_pool_delete(cluster.id, effective_pool_name)
+            pool = None
 
         if pool:
             private_connection = pool.private_connection
