@@ -498,13 +498,13 @@ class DoIdemApi:
                 self.api.db_user_delete(cluster.id, user_name=user_name)
 
         pool = None
+        effective_pool_name = f"user_{user_name}"
 
         for candidate in self.api.db_pool_list(cluster.id):
-            if candidate.name == f"user_{user_name}":
+            if candidate.name == effective_pool_name:
                 pool = candidate
                 break
 
-        effective_pool_name = f"user_{user_name}"
         if not pool and pool_size:
             if present:
                 changed = True
