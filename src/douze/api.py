@@ -184,6 +184,12 @@ class DoApi(api.SyncClient):
         Creates a database within a cluster
         """
 
+    @api.delete("databases/{cluster_id}/dbs/{database_name}")
+    def db_database_delete(self, cluster_id: Text, database_name: Text) -> None:
+        """
+        Deletes the specified database within the cluster
+        """
+
     @api.get("databases/{cluster_id}/firewall", hint="rules")
     def db_firewall_list(self, cluster_id: Text) -> List[DatabaseFirewallRule]:
         """
@@ -214,6 +220,12 @@ class DoApi(api.SyncClient):
         Creates a user within a cluster
         """
 
+    @api.delete("databases/{cluster_id}/users/{user_name}")
+    def db_user_delete(self, cluster_id: Text, user_name: Text) -> None:
+        """
+        Deletes a user within a cluster
+        """
+
     @api.get("databases/{cluster_id}/pools", hint="pools")
     def db_pool_list(self, cluster_id: Text) -> List[DatabaseConnectionPool]:
         """
@@ -226,6 +238,12 @@ class DoApi(api.SyncClient):
     ) -> DatabaseConnectionPool:
         """
         Creates a connection pool for that cluster
+        """
+
+    @api.delete("databases/{cluster_id}/pools/{pool_name}")
+    def db_pool_delete(self, cluster_id: Text, pool_name: Text) -> None:
+        """
+        Deletes a connection pool for that cluster
         """
 
     @api.get("database/{cluster_id}/pools/{pool_name}", hint="pool")
