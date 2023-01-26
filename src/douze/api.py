@@ -13,12 +13,29 @@ logger = getLogger("douze.api")
 
 
 class DoApi(api.SyncClient):
+    """
+    Root class for all sub apis of DigitalOcean.
+
+    Note: Each sub api is a subclass of this very class, so everything
+    is available from everywhere, but can be specialised down the tree,
+    and common methods are accessible under `self`
+    """
+
     BASE_URL = "https://api.digitalocean.com/v2/"
 
     def __init__(self, api_token: Text = getenv("DO_API_TOKEN", "")):
         super().__init__()
         self.api_token = api_token
         self.helper.http.timeout = Timeout(30.0)
+
+        self._apps = None
+
+    @property
+    def apps(self):
+        from douze.apps.api import AppsApi
+
+        self._apps = self._apps or AppsApi(self)
+        return self._apps
 
     def init_serialize(self) -> Callable[[Any], Any]:
         """

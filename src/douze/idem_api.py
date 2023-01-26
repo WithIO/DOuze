@@ -47,6 +47,10 @@ class DoIdemApi:
         self.api: DoApi = api
         self._cluster_cache = {}
 
+        from .apps.idem_api import AppsIdemApi
+
+        self.apps = AppsIdemApi(api)
+
     def _find_cluster_by_name(self, name) -> Optional[DatabaseCluster]:
         """
         For some reason, the API asks that you set a unique name to clusters

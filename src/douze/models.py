@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, List, Optional, Text, Union
+from typing import Any, List, Optional, Text, Type, Union
 from urllib.parse import quote
 
 from typefit.narrows import DateTime
@@ -11,9 +11,11 @@ __all__ = [
     "EntryState",
     "DatabaseSize",
     "DatabaseEngine",
+    "Version",
     "PostgreSqlVersion",
     "MySqlVersion",
     "RedisVersion",
+    "MongoVersion",
     "DatabaseUserRole",
     "MySqlAuthPlugin",
     "DatabaseStatus",
@@ -57,12 +59,30 @@ class DatabaseSize(Enum):
 
 
 class DatabaseEngine(Enum):
+    redis = "redis"
     pg = "pg"
     mysql = "mysql"
-    redis = "redis"
+    mongo = "mongo"
 
 
-class PostgreSqlVersion(Enum):
+class Version(Enum):
+    """
+    Enum that provides a way to get the latest version of something, sorting
+    enum values numerically (thus they have to be parseable ints).
+    """
+
+    @classmethod
+    def latest(cls: Type["Version"]):
+        return cls.__members__[[*cls.__members__.keys()][-1]]
+
+    @classmethod
+    def stable(cls: Type["Version"]):
+        if hasattr(cls, "stable"):
+            return cls.__members__["stable"]
+        return cls.latest()
+
+
+class PostgreSqlVersion(Version):
     v10 = "10"
     v11 = "11"
     v12 = "12"
@@ -70,13 +90,18 @@ class PostgreSqlVersion(Enum):
     v14 = "14"
 
 
-class MySqlVersion(Enum):
+class MySqlVersion(Version):
     v8 = "8"
 
 
-class RedisVersion(Enum):
+class RedisVersion(Version):
     v5 = "5"
     v6 = "6"
+    v7 = "7"
+
+
+class MongoVersion(Version):
+    v4 = "4.4"
 
 
 class DatabaseUserRole(Enum):
