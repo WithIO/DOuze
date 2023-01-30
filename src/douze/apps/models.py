@@ -143,24 +143,73 @@ class AppVariableDefinition:
 @dataclass
 class RouteSpec:
     path: Optional[Text] = "/"
-    preserve_path_prefix: bool = True
+    preserve_path_prefix: bool = False
+
+
+@dataclass
+class Papertrail:
+    """
+    PaperTrail configuration
+
+    endpoint
+        Papertrail syslog endpoint.
+    """
+
+    endpoint: Text
+
+
+@dataclass
+class DataDog:
+    api_key: Text
+    endpoint: Text
+
+
+@dataclass
+class Logtail:
+    """
+    LogTail configuration
+
+    token
+        Logtail token.
+    """
+
+    token: Text
+
+
+@dataclass
+class LogDestinations:
+    NAME_PATTERN = r"""^[A-Za-z0-9()\[\]'"][-A-Za-z0-9_. \/()\[\]]{0,40}[A-Za-z0-9()\[\]'"]$"""
+
+    name: Text
+    papertrail: Optional[Papertrail] = None
+    datadog: Optional[DataDog] = None
+    logtail: Optional[Logtail] = None
+
+    def __post_init__(self):
+        self._validate_name()
+
+    def _validate_name(self):
+        if not re.match(self.NAME_PATTERN, self.name):
+            raise ValueError(f"invalid name {self.name}")
 
 
 @dataclass
 class AppCommonRunnerSpec:
     """
-    Members
-    -------
     name
         The name. Must be unique across all components within the same app.
-    git
-    github
-    gitlab
-    image
+    git | github | gitlab | image
         Only one of these may appear simultaneously.
     dockerfile_path
         The path to the Dockerfile relative to the root of the repo. If set, it will be used to build this component.
         Otherwise, App Platform will attempt to build it using buildpacks.
+    build_command
+        An optional build command to run while building this component from source.
+    run_command
+        An optional run command to override the component's default.
+    source_dir
+        An optional path to the working directory to use for the build. For Dockerfile builds,
+        this will be used as the build context. Must be relative to the root of the repo.
     """
 
     name: Text
@@ -171,10 +220,10 @@ class AppCommonRunnerSpec:
     dockerfile_path: Optional[Text] = None
     build_command: Optional[Text] = None
     run_command: Optional[Text] = None
-    source_dir: Optional[Text] = "/"  # REVIEW
+    source_dir: Optional[Text] = None  # REVIEW
     envs: List[AppVariableDefinition] = field(default_factory=list)
-    environment_slug: Text = None
-    log_destinations: Any = None
+    environment_slug: Optional[Text] = None
+    log_destinations: List[LogDestinations] = field(default_factory=list)
 
     def __post_init__(self):
         validate_name(self.name)
@@ -256,7 +305,7 @@ class AppFunctionSpec:
     source_dir: Optional[Text] = None
     alerts: Optional[Any] = None
     envs: Optional[List[AppVariableDefinition]] = field(default_factory=list)
-    log_destinations: Optional[Any] = None
+    log_destinations: List[LogDestinations] = field(default_factory=list)
 
     def __post_init__(self):
         validate_name(self.name)
@@ -522,7 +571,8 @@ def get_engine_versions(engine: Engine) -> Type[Version]:
 
 
 def validate_db_version(
-    engine: Engine, version: Union[Text, Type[Version]] = None
+    engine: Engine,
+    version: Union[Text, Type[Version]] = None,
 ) -> Type[Version]:
     """
     Type checking for the possible enums, one for each Engine type.
@@ -534,12 +584,10 @@ def validate_db_version(
     ng_version = get_engine_versions(engine)
 
     if version is None:
-        version = get_engine_versions(engine).latest()
-    elif ng_version is not None:
-        if isinstance(version, Text):
-            version = ng_version(version)
-    else:
-        raise ValueError(f"unknown version {version} for DB engine {engine}")
+        version = ng_version.latest()
+
+    if isinstance(version, Text):
+        version = ng_version(version)
 
     return version
 
