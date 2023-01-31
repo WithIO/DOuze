@@ -29,12 +29,20 @@ class DoApi(api.SyncClient):
         self.helper.http.timeout = Timeout(30.0)
 
         self._apps = None
+        self._uptime = None
 
     @property
     def apps(self):
         from douze.apps.api import AppsApi
 
         self._apps = self._apps or AppsApi(self)
+        return self._apps
+
+    @property
+    def uptime(self):
+        from douze.checks.api import ChecksApi
+
+        self._apps = self._apps or ChecksApi(self)
         return self._apps
 
     def init_serialize(self) -> Callable[[Any], Any]:
