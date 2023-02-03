@@ -1,6 +1,6 @@
 from collections import ChainMap
 from dataclasses import Field, fields, is_dataclass
-from typing import Any, Text, Union, get_type_hints
+from typing import Any, Mapping, Sequence, Text, Union, get_type_hints
 
 # noinspection PyPep8Naming
 from uuid import UUID as BaseUuid
@@ -90,3 +90,28 @@ class UndefinedSerializer(SaneSerializer):
             for k, field_type in get_type_hints(obj.__class__).items()
             if not (is_optional(field_type) and getattr(obj, k) is None)
         }
+
+
+class IgnoreNoneSerializer(SaneSerializer):
+    """
+    Ignores None values in various serialized structures.
+    """
+
+    def serialize_sequence(self, obj: Sequence):
+        ser = super().serialize_sequence(obj)
+        if not ser:
+            return None
+        return [*filter(lambda x: x is not None, ser)]
+
+    def _ignore_none(self, obj: Mapping):
+        if not obj:
+            return None
+        return {k: self.serialize(v) for k, v in obj.items() if v is not None}
+
+    def serialize_dataclass(self, obj: Mapping):
+        ser = super().serialize_dataclass(obj)
+        return self._ignore_none(ser)
+
+    def serialize_mapping(self, obj: Mapping):
+        ser = super().serialize_mapping(obj)
+        return self._ignore_none(ser)
