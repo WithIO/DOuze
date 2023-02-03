@@ -28,9 +28,9 @@ class ChecksApi(DoApi):
 
     def checks_list(self) -> Iterator[Check]:
         """
-        List all the Uptime checks on your account.
+        List all the Uptime uptime on your account.
         """
-        yield from self._iterate_collection(self._checks_list, "checks")
+        yield from self._iterate_collection(self._checks_list, "uptime")
 
     @api.get("checks/{check_id}", hint="check")
     def check_get(self, check_id: Text) -> Check:

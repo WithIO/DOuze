@@ -99,198 +99,20 @@ class DatabaseClusterCreate:
     private_network_uuid: Optional[Uuid] = None
 
 
-class AppsIdemApi(api.SyncClient):
+class AppsIdemApi(DoIdemApi):
     DEFAULT_PSQL_VERSION = PostgreSqlVersion.v14
     DEFAULT_REDIS_VERSION = RedisVersion.v7
     DEFAULT_MYSQL_VERSION = MySqlVersion.v8
     DEFAULT_MONGO_VERSION = MongoVersion.v4
 
-    def __init__(self, do_api: DoApi):
-        super().__init__(do_api)
+    def __init__(self, root_api: DoIdemApi):
+        super().__init__(root_api.api)
         # this is for IntelliSense, as the type def in super does not match
-        self.api: DoApi = self.api
 
     def _find_user_by_name(self, cluster_id: Text, user_name: Text):
-        for candidate in self.api.db_user_list(cluster_id):
+        for candidate in self.api.db.user_list(cluster_id):
             if candidate.name == user_name:
                 return candidate
-
-    def _database_cluster(
-        self,
-        name: Text,
-        region: Text,
-        engine: Engine,
-        size: DatabaseSize,
-        nodes: int,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-        version: Union[
-            PostgreSqlVersion, MySqlVersion, RedisVersion, MongoVersion
-        ] = None,
-    ) -> Outcome:
-        """
-        Makes sure that this cluster exists. If the existing cluster doesn't
-        match the specifications, this function will fail and not attempt to
-        make any changes.
-
-        Parameters
-        ----------
-        name
-            Name of the cluster
-        region
-            DigitalOcean region for that cluster (by example: "ams3"), see the
-            documentation to get those.
-        engine
-            possible values: "redis", "pg", "mysql", "mongodb"
-        size
-            slug size of the cluster
-        nodes
-            How many nodes do you want? Minimum 1, maximum 3 (except on the
-            smallest size which can have only 1 node)
-        version
-            desired version of the cluster
-        private_network
-            ID of the private network to connect this cluster to. If not
-            specified, it will get connected to the default network for this
-            region.
-        skip_checks
-            Don't check that existing clusters match specifications
-        """
-
-        cluster = self._find_cluster_by_name(name)
-        changed = False
-        output = None
-
-        if cluster is None:
-            changed = True
-            cluster = self.api.db_cluster_create(
-                DatabaseClusterCreate(
-                    name=name,
-                    engine=engine,
-                    version=version,
-                    size=size,
-                    region=region,
-                    num_nodes=nodes,
-                    private_network_uuid=private_network,
-                )
-            )
-            output = f"Created {engine.name} database cluster {name}"
-
-        if cluster.status != DatabaseStatus.online:
-            start = time()
-
-            for _ in range(0, self.PROVISION_TIMEOUT // self.PROVISION_POLL + 1):
-                sleep(self.PROVISION_POLL)
-                cluster = self.api.db_cluster_get(cluster.id)
-
-                if cluster.status == DatabaseStatus.online:
-                    break
-
-                if time() - start > self.PROVISION_TIMEOUT:
-                    break
-
-        if cluster.status != DatabaseStatus.online:
-            raise IdemApiError("Cluster failed to come online")
-
-        if not skip_checks:
-            if cluster.size != size:
-                raise IdemApiError("Existing cluster does not have the right size")
-
-            if cluster.region != region:
-                raise IdemApiError("Existing cluster is not in the right region")
-
-            if cluster.num_nodes != nodes:
-                raise IdemApiError(
-                    "Existing cluster does not have the right nodes number"
-                )
-
-        self._cluster_cache[cluster.name] = cluster
-
-        return Outcome(changed, output)
-
-    def psql_cluster(
-        self,
-        name: Text,
-        region: Text,
-        size: DatabaseSize,
-        nodes: int,
-        version: PostgreSqlVersion = DEFAULT_PSQL_VERSION,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-    ) -> Outcome:
-        return self._database_cluster(
-            name=name,
-            region=region,
-            engine=Engine.pg,
-            size=size,
-            nodes=nodes,
-            private_network=private_network,
-            skip_checks=skip_checks,
-            version=version,
-        )
-
-    def redis_cluster(
-        self,
-        name: Text,
-        region: Text,
-        size: DatabaseSize,
-        nodes: int,
-        version: RedisVersion = DEFAULT_REDIS_VERSION,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-    ) -> Outcome:
-        return self._database_cluster(
-            name=name,
-            region=region,
-            engine=Engine.redis,
-            size=size,
-            nodes=nodes,
-            private_network=private_network,
-            skip_checks=skip_checks,
-            version=version,
-        )
-
-    def mysql_cluster(
-        self,
-        name: Text,
-        region: Text,
-        size: DatabaseSize,
-        nodes: int,
-        version: MySqlVersion = DEFAULT_MYSQL_VERSION,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-    ) -> Outcome:
-        return self._database_cluster(
-            name=name,
-            region=region,
-            engine=Engine.mysql,
-            size=size,
-            nodes=nodes,
-            private_network=private_network,
-            skip_checks=skip_checks,
-            version=version,
-        )
-
-    def mongo_cluster(
-        self,
-        name: Text,
-        region: Text,
-        size: DatabaseSize,
-        nodes: int,
-        version: MongoVersion = DEFAULT_MONGO_VERSION,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-    ) -> Outcome:
-        return self._database_cluster(
-            name=name,
-            region=region,
-            engine=Engine.mongo,
-            size=size,
-            nodes=nodes,
-            private_network=private_network,
-            skip_checks=skip_checks,
-            version=version,
-        )
 
     def _find_app_by_name(self, app_name: Text):
         return self.api.apps.app_get(app_name=app_name)

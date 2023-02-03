@@ -5,14 +5,14 @@ from typing import Any, List, Optional, Text, Type, Union
 
 from typefit.narrows import DateTime
 
-from douze.models import (
-    Collection,
+from douze.db.models import (
+    Engine,
     MongoVersion,
     MySqlVersion,
     PostgreSqlVersion,
     RedisVersion,
-    Version,
 )
+from douze.models import Collection, Version
 from douze.types import Uuid
 
 __all__ = [
@@ -178,7 +178,9 @@ class Logtail:
 
 @dataclass
 class LogDestinations:
-    NAME_PATTERN = r"""^[A-Za-z0-9()\[\]'"][-A-Za-z0-9_. \/()\[\]]{0,40}[A-Za-z0-9()\[\]'"]$"""
+    NAME_PATTERN = (
+        r"""^[A-Za-z0-9()\[\]'"][-A-Za-z0-9_. \/()\[\]]{0,40}[A-Za-z0-9()\[\]'"]$"""
+    )
 
     name: Text
     papertrail: Optional[Papertrail] = None
@@ -318,13 +320,6 @@ class AppStaticSitesSpec(AppCommonRunnerSpec):
     error_document: Optional[Text] = None
     catchall_document: Optional[Text] = None
     output_dir: Optional[Text] = None
-
-
-class Engine(Enum):
-    mysql = "MYSQL"
-    pg = "PG"
-    redis = "REDIS"
-    mongo = "MONGO"
 
 
 @dataclass
