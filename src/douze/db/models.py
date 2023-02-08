@@ -25,6 +25,7 @@ __all__ = [
     "DatabaseClusterCreate",
     "DatabaseMaintenanceWindow",
     "DatabaseConnection",
+    "DatabaseEngine",
     "DatabaseUser",
     "DatabaseUserCreate",
     "MySqlSettings",
