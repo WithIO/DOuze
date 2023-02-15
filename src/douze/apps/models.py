@@ -485,7 +485,7 @@ class DomainSpec:
 
     domain: Text
     type: Type
-    minimum_tls_version: TLSVersion = TLSVersion.TLS1_2
+    minimum_tls_version: Optional[TLSVersion] = TLSVersion.TLS1_2
     wildcard: bool = False
     zone: Optional[Text] = None
 
