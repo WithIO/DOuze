@@ -5,15 +5,15 @@ from typing import Any, List, Optional, Text, Type, Union
 
 from typefit.narrows import DateTime
 
-from douze.db.models import (
+from ..db.models import (
     Engine,
     MongoVersion,
     MySqlVersion,
     PostgreSqlVersion,
     RedisVersion,
 )
-from douze.models import Collection, Version
-from douze.types import Uuid
+from ..models import Collection, Version
+from ..types import Uuid
 
 __all__ = [
     "App",

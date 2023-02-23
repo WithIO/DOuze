@@ -12,10 +12,6 @@ except ImportError:
 class DoApi:
     """
     Root class for all sub apis of DigitalOcean.
-
-    Note: Each sub api is a subclass of this very class, so everything
-    is available from everywhere, but can be specialised down the tree,
-    and common methods are accessible under `self`
     """
 
     def __init__(self, api_token: Text = getenv("DO_API_TOKEN", "")):

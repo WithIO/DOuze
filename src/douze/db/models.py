@@ -5,8 +5,8 @@ from urllib.parse import quote
 
 from typefit.narrows import DateTime
 
-from douze.models import Collection, Day, Version
-from douze.types import Uuid
+from ..models import Collection, Day, Version
+from ..types import Uuid
 
 __all__ = [
     "DatabaseSize",

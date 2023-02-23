@@ -1,5 +1,5 @@
-from douze.api import DoApi
-from douze.idem_api import DoIdemApi
+from ..api import DoApi
+from ..idem_api import DoIdemApi
 
 
 class DropletIdemApi(DoIdemApi):

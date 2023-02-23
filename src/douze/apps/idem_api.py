@@ -2,17 +2,17 @@ from dataclasses import dataclass, field
 from typing import Iterator, Optional, Text, Union
 from urllib.parse import quote
 
-from douze.api import DoApi
-from douze.apps.models import Engine
-from douze.db.models import (
+from ..api import DoApi
+from ..apps.models import Engine
+from ..db.models import (
     DatabaseSize,
     MongoVersion,
     MySqlVersion,
     PostgreSqlVersion,
     RedisVersion,
 )
-from douze.idem_api import DoIdemApi
-from douze.types import Uuid
+from ..idem_api import DoIdemApi
+from ..types import Uuid
 
 
 @dataclass

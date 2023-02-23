@@ -1,11 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional, Text, Type, Union
-from urllib.parse import quote
-
-from typefit.narrows import DateTime
-
-from .types import Uuid
+from typing import Type
 
 __all__ = [
     "EntryState",

@@ -2,9 +2,8 @@ from typing import Iterator
 
 from typefit import api
 
-from douze.api import DoApi
-
 from .. import DoApiMixin
+from ..api import DoApi
 from .models import *
 from .models import DropletCollection
 

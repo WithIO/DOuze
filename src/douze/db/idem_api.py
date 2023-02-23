@@ -9,9 +9,8 @@ from typing import List, Optional, Sequence, Text, Union
 
 from httpx import Client
 
-from douze.idem_api import DoIdemApi, IdemApiError, Outcome
-
 from ..api import DoApi
+from ..idem_api import DoIdemApi, IdemApiError, Outcome
 from ..models import EntryState
 from ..types import Uuid
 from .models import *
@@ -226,92 +225,6 @@ class DatabaseIdemApi(DoIdemApi):
             ],
             EntryState.present,
         )
-
-    def psql_cluster(
-        self,
-        name: Text,
-        region: Text,
-        size: DatabaseSize,
-        nodes: int,
-        version: PostgreSqlVersion = DEFAULT_PSQL_VERSION,
-        private_network: Optional[Uuid] = None,
-        skip_checks: bool = False,
-    ) -> Outcome:
-        """
-        Makes sure that this cluster exists. If the existing cluster doesn't
-        match the specifications, this function will fail and not attempt to
-        make any changes.
-
-        Parameters
-        ----------
-        name
-            Name of the cluster
-        region
-            DigitalOcean region for that cluster (by example: "ams3"), see the
-            documentation to get those.
-        size
-            Size of the cluster
-        nodes
-            How many nodes do you want? Minimum 1, maximum 3 (except on the
-            smallest size which can have only 1 node)
-        version
-            Version of PostgreSQL
-        private_network
-            ID of the private network to connect this cluster to. If not
-            specified, it will get connected to the default network for this
-            region.
-        skip_checks
-            Don't check that existing clusters match specifications
-        """
-
-        cluster = self._find_cluster_by_name(name)
-        changed = False
-
-        if cluster is None:
-            changed = True
-            cluster = self.api.db.cluster_create(
-                DatabaseClusterCreate(
-                    name=name,
-                    engine=DatabaseEngine.pg,
-                    version=version,
-                    size=size,
-                    region=region,
-                    num_nodes=nodes,
-                    private_network_uuid=private_network,
-                )
-            )
-
-        if cluster.status != DatabaseStatus.online:
-            start = time()
-
-            for _ in range(0, self.PROVISION_TIMEOUT // self.PROVISION_POLL + 1):
-                sleep(self.PROVISION_POLL)
-                cluster = self.api.db.cluster_get(cluster.id)
-
-                if cluster.status == DatabaseStatus.online:
-                    break
-
-                if time() - start > self.PROVISION_TIMEOUT:
-                    break
-
-        if cluster.status != DatabaseStatus.online:
-            raise IdemApiError("Cluster failed to come online")
-
-        if not skip_checks:
-            if cluster.size != size:
-                raise IdemApiError("Existing cluster does not have the right size")
-
-            if cluster.region != region:
-                raise IdemApiError("Existing cluster is not in the right region")
-
-            if cluster.num_nodes != nodes:
-                raise IdemApiError(
-                    "Existing cluster does not have the right nodes number"
-                )
-
-        self._cluster_cache[cluster.name] = cluster
-
-        return Outcome(changed)
 
     def psql_database(
         self,
@@ -582,7 +495,7 @@ class DatabaseIdemApi(DoIdemApi):
         self,
         name: Text,
         region: Text,
-        engine: Engine,
+        engine: DatabaseEngine,
         size: DatabaseSize,
         nodes: int,
         private_network: Optional[Uuid] = None,
@@ -666,7 +579,7 @@ class DatabaseIdemApi(DoIdemApi):
         return self._database_cluster(
             name=name,
             region=region,
-            engine=Engine.pg,
+            engine=DatabaseEngine.pg,
             size=size,
             nodes=nodes,
             private_network=private_network,
@@ -687,7 +600,7 @@ class DatabaseIdemApi(DoIdemApi):
         return self._database_cluster(
             name=name,
             region=region,
-            engine=Engine.redis,
+            engine=DatabaseEngine.redis,
             size=size,
             nodes=nodes,
             private_network=private_network,
@@ -708,7 +621,7 @@ class DatabaseIdemApi(DoIdemApi):
         return self._database_cluster(
             name=name,
             region=region,
-            engine=Engine.mysql,
+            engine=DatabaseEngine.mysql,
             size=size,
             nodes=nodes,
             private_network=private_network,
@@ -729,7 +642,7 @@ class DatabaseIdemApi(DoIdemApi):
         return self._database_cluster(
             name=name,
             region=region,
-            engine=Engine.mongo,
+            engine=DatabaseEngine.mongo,
             size=size,
             nodes=nodes,
             private_network=private_network,

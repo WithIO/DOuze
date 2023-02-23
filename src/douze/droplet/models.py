@@ -4,7 +4,7 @@ from typing import List, Text
 
 from typefit.narrows import DateTime
 
-from douze.models import Collection
+from ..models import Collection
 
 __all__ = [
     "DropletStatus",
