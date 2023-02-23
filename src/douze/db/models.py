@@ -69,6 +69,7 @@ class PostgreSqlVersion(Version):
     v12 = "12"
     v13 = "13"
     v14 = "14"
+    v15 = "15"
 
 
 class MySqlVersion(Version):
