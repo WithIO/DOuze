@@ -122,8 +122,8 @@ class DatabaseCluster:
     name: Text
     engine: DatabaseEngine
     version: Union[PostgreSqlVersion, MySqlVersion, RedisVersion]
-    connection: "DatabaseConnection"
-    private_connection: "DatabaseConnection"
+    connection: Union["PgConnection", "RedisConnection"]
+    private_connection: Union["PgConnection", "RedisConnection"]
     num_nodes: int
     size: DatabaseSize
     region: Text
@@ -194,7 +194,6 @@ class DatabaseFirewallRule(DatabaseFirewallRuleCreate):
 
 @dataclass(frozen=True)
 class DatabaseConnection:
-    database: Text
     host: Text
     port: int
     user: Text
@@ -204,6 +203,7 @@ class DatabaseConnection:
 
 @dataclass(frozen=True)
 class PgConnection(DatabaseConnection):
+    database: Text
 
     @property
     def uri(self) -> Text:
