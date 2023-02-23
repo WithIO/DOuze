@@ -1,20 +1,20 @@
 from typing import Iterator
-from urllib.parse import urljoin
 
 from typefit import api
 
 from douze.api import DoApi
 
+from .. import DoApiMixin
 from .models import *
 from .models import DropletCollection
 
 
-class DropletApi(DoApi):
-    def __init__(self, root_api: DoApi):
-        super().__init__(root_api.api_token)
-        self.BASE_URL = urljoin(super().BASE_URL, "droplets")
+class DropletApi(DoApiMixin):
+    def __init__(self, root: DoApi):
+        super().__init__(root.api_token)
+        self.api = root
 
-    @api.get("?page={page}")
+    @api.get("droplets?page={page}")
     def _droplet_list(self, page: int) -> DropletCollection:
         """
         Lists droplets on a specific page of the list
@@ -25,4 +25,4 @@ class DropletApi(DoApi):
         Iterates through all the droplets in the account
         """
 
-        yield from self._iterate_collection(self._droplet_list, "droplets")
+        yield from self.iterate_collection(self._droplet_list, "droplets")

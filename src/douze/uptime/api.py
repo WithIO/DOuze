@@ -6,16 +6,17 @@ from typefit import api
 
 from douze.api import DoApi
 
+from .. import DoApiMixin
 from .models import Alert, AlertCollection, Check, ChecksCollection
 
 
-class ChecksApi(DoApi):
+class ChecksApi(DoApiMixin):
     """
     DigitalOcean Uptime Checks provide the ability to monitor your endpoints from around the world,
     and alert you when they're slow, unavailable, or SSL certificates are expiring.
     """
 
-    BASE_URL = urljoin(DoApi.BASE_URL, "uptime/")
+    BASE_URL = urljoin(DoApiMixin.BASE_URL, "uptime/")
 
     def __init__(self, root_api: DoApi):
         super().__init__(root_api.api_token)
@@ -28,9 +29,9 @@ class ChecksApi(DoApi):
 
     def checks_list(self) -> Iterator[Check]:
         """
-        List all the Uptime uptime on your account.
+        List all the Uptime checks on your account.
         """
-        yield from self._iterate_collection(self._checks_list, "uptime")
+        yield from self.iterate_collection(self._checks_list, "uptime")
 
     @api.get("checks/{check_id}", hint="check")
     def check_get(self, check_id: Text) -> Check:
@@ -49,4 +50,4 @@ class ChecksApi(DoApi):
         List all the Uptime alerts on your account.
         """
         page_getter = partial(self._alerts_list, check_id)
-        yield from self._iterate_collection(page_getter, "alerts")
+        yield from self.iterate_collection(page_getter, "alerts")

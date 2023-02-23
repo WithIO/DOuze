@@ -1,20 +1,17 @@
 from dataclasses import dataclass, field
-from time import sleep, time
 from typing import Iterator, Optional, Text, Union
 from urllib.parse import quote
 
-from douze import api
 from douze.api import DoApi
 from douze.apps.models import Engine
-from douze.idem_api import DoIdemApi, IdemApiError, Outcome
-from douze.models import (
+from douze.db.models import (
     DatabaseSize,
-    DatabaseStatus,
     MongoVersion,
     MySqlVersion,
     PostgreSqlVersion,
     RedisVersion,
 )
+from douze.idem_api import DoIdemApi
 from douze.types import Uuid
 
 
@@ -100,14 +97,13 @@ class DatabaseClusterCreate:
 
 
 class AppsIdemApi(DoIdemApi):
-    DEFAULT_PSQL_VERSION = PostgreSqlVersion.v14
+    DEFAULT_PSQL_VERSION = PostgreSqlVersion.v15
     DEFAULT_REDIS_VERSION = RedisVersion.v7
     DEFAULT_MYSQL_VERSION = MySqlVersion.v8
     DEFAULT_MONGO_VERSION = MongoVersion.v4
 
-    def __init__(self, root_api: DoIdemApi):
-        super().__init__(root_api.api)
-        # this is for IntelliSense, as the type def in super does not match
+    def __init__(self, root: DoApi):
+        super().__init__(root)
 
     def _find_user_by_name(self, cluster_id: Text, user_name: Text):
         for candidate in self.api.db.user_list(cluster_id):

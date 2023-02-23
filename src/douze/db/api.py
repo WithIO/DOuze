@@ -1,19 +1,18 @@
 from typing import Iterator, List, Text, Union
-from urllib.parse import urljoin
 
 from typefit import api
 
-from douze.api import DoApi
-
+from .. import DoApiMixin
+from ..api import DoApi
 from .models import *
 
 
-class DatabaseApi(DoApi):
-    def __init__(self, root_api: DoApi):
-        super().__init__(root_api.api_token)
-        self.BASE_URL = urljoin(super().BASE_URL, "databases")
+class DatabaseApi(DoApiMixin):
+    def __init__(self, root: DoApi):
+        super().__init__(root.api_token)
+        self.api = root  # to access other parts of the api
 
-    @api.get("?page={page}")
+    @api.get("databases?page={page}")
     def _cluster_list(self, page) -> DatabaseClusterCollection:
         """
         Fetches one page of database clusters list
@@ -32,23 +31,23 @@ class DatabaseApi(DoApi):
         are just ignored.
         """
 
-        for cluster in self._iterate_collection(self._cluster_list, "databases"):
+        for cluster in self.iterate_collection(self._cluster_list, "databases"):
             if isinstance(cluster, DatabaseCluster):
                 yield cluster
 
-    @api.post("", json=lambda cluster: cluster, hint="database")
+    @api.post("databases", json=lambda cluster: cluster, hint="database")
     def cluster_create(self, cluster: DatabaseClusterCreate) -> DatabaseCluster:
         """
         Creates a database cluster
         """
 
-    @api.get("{cluster_id}", hint="database")
+    @api.get("databases/{cluster_id}", hint="database")
     def cluster_get(self, cluster_id: Text) -> DatabaseCluster:
         """
         Returns a database cluster
         """
 
-    @api.get("{cluster_id}/dbs?page={page}")
+    @api.get("databases/{cluster_id}/dbs?page={page}")
     def _database_list(self, page: int, cluster_id: Text) -> DatabaseCollection:
         """
         Retrieves a single page of the databases list for a cluster
@@ -59,29 +58,29 @@ class DatabaseApi(DoApi):
         Iterates through all the databases present in a cluster
         """
 
-        yield from self._iterate_collection(
+        yield from self.iterate_collection(
             self._database_list, "dbs", cluster_id=cluster_id
         )
 
-    @api.post("{cluster_id}/dbs", hint="db", json=lambda database: database)
+    @api.post("databases/{cluster_id}/dbs", hint="db", json=lambda database: database)
     def database_create(self, cluster_id: Text, database: Database) -> Database:
         """
         Creates a database within a cluster
         """
 
-    @api.delete("{cluster_id}/dbs/{database_name}")
+    @api.delete("databases/{cluster_id}/dbs/{database_name}")
     def database_delete(self, cluster_id: Text, database_name: Text) -> None:
         """
         Deletes the specified database within the cluster
         """
 
-    @api.get("{cluster_id}/firewall", hint="rules")
+    @api.get("databases/{cluster_id}/firewall", hint="rules")
     def firewall_list(self, cluster_id: Text) -> List[DatabaseFirewallRule]:
         """
         Lists all firewall rules for a given cluster
         """
 
-    @api.put("{cluster_id}/firewall", json=lambda rules: {"rules": rules})
+    @api.put("databases/{cluster_id}/firewall", json=lambda rules: {"rules": rules})
     def firewall_update(
         self,
         cluster_id: Text,
@@ -91,31 +90,31 @@ class DatabaseApi(DoApi):
         Updates the firewall rules for that cluster
         """
 
-    @api.get("{cluster_id}/users", hint="users")
+    @api.get("databases/{cluster_id}/users", hint="users")
     def user_list(self, cluster_id: Text) -> List[DatabaseUser]:
         """
         Retrieves the list of users found in a cluster
         """
 
-    @api.post("{cluster_id}/users", hint="user", json=lambda user: user)
+    @api.post("databases/{cluster_id}/users", hint="user", json=lambda user: user)
     def user_create(self, cluster_id: Text, user: DatabaseUserCreate) -> DatabaseUser:
         """
         Creates a user within a cluster
         """
 
-    @api.delete("{cluster_id}/users/{user_name}")
+    @api.delete("databases/{cluster_id}/users/{user_name}")
     def user_delete(self, cluster_id: Text, user_name: Text) -> None:
         """
         Deletes a user within a cluster
         """
 
-    @api.get("{cluster_id}/pools", hint="pools")
+    @api.get("databases/{cluster_id}/pools", hint="pools")
     def pool_list(self, cluster_id: Text) -> List[DatabaseConnectionPool]:
         """
         Lists all connection pools present in the cluster
         """
 
-    @api.post("{cluster_id}/pools", hint="pool", json=lambda pool: pool)
+    @api.post("databases/{cluster_id}/pools", hint="pool", json=lambda pool: pool)
     def pool_create(
         self, cluster_id: Text, pool: DatabaseConnectionPoolCreate
     ) -> DatabaseConnectionPool:
@@ -123,13 +122,13 @@ class DatabaseApi(DoApi):
         Creates a connection pool for that cluster
         """
 
-    @api.delete("{cluster_id}/pools/{pool_name}")
+    @api.delete("databases/{cluster_id}/pools/{pool_name}")
     def pool_delete(self, cluster_id: Text, pool_name: Text) -> None:
         """
         Deletes a connection pool for that cluster
         """
 
-    @api.get("database/{cluster_id}/pools/{pool_name}", hint="pool")
+    @api.get("databases/{cluster_id}/pools/{pool_name}", hint="pool")
     def pool_get(self, cluster_id: Text, pool_name: Text) -> DatabaseConnectionPool:
         """
         Returns a connection pool from that cluster

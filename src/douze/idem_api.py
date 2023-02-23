@@ -1,7 +1,13 @@
-from functools import cached_property
+import logging
 from typing import Any, NamedTuple, Optional
 
 from .api import DoApi
+
+try:
+    from functools import cached_property
+except ImportError:
+    # fallback for python 3.7
+    cached_property = property
 
 
 class IdemApiError(Exception):
@@ -32,28 +38,28 @@ class DoIdemApi:
 
     def __init__(self, api: DoApi):
         self.api: DoApi = api
-        self._cluster_cache = {}
-
-    @cached_property
-    def db(self):
-        from .db.idem_api import DatabaseIdemApi
-
-        return DatabaseIdemApi(self)
+        self.logger = logging.getLogger("douze.idem_api")
 
     @cached_property
     def apps(self):
         from .apps.idem_api import AppsIdemApi
 
-        return AppsIdemApi(self)
+        return AppsIdemApi(self.api)
+
+    @cached_property
+    def db(self):
+        from .db.idem_api import DatabaseIdemApi
+
+        return DatabaseIdemApi(self.api)
+
+    @cached_property
+    def droplet(self):
+        from .droplet.idem_api import DropletIdemApi
+
+        return DropletIdemApi(self.api)
 
     @cached_property
     def uptime(self):
         from .uptime.idem_api import UptimeIdemApi
 
-        return UptimeIdemApi(self)
-
-    @cached_property
-    def auth(self):
-        from .auth.idem_api import AuthIdemApi
-
-        return AuthIdemApi(self)
+        return UptimeIdemApi(self.api)

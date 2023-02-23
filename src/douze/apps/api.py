@@ -1,18 +1,19 @@
 from functools import partial
 from typing import Any, Callable, Iterator, Optional, Text
-from urllib.parse import urljoin
 
 from typefit import api
+from typefit.api import Headers as hm
 
-from ..api import DoApi, hm
+from .. import DoApiMixin
+from ..api import DoApi
 from ..types import IgnoreNoneSerializer
 from .models import *
 
 
-class AppsApi(DoApi):
-    def __init__(self, root_api: DoApi):
-        super().__init__(root_api.api_token)
-        self.BASE_URL = urljoin(super().BASE_URL, "apps")
+class AppsApi(DoApiMixin):
+    def __init__(self, root: DoApi):
+        super().__init__(root.api_token)
+        self.api = root
 
     def init_serialize(self) -> Callable[[Any], Any]:
         return IgnoreNoneSerializer().serialize
@@ -33,7 +34,7 @@ class AppsApi(DoApi):
         active deployment as well as any in progress ones will also be
         included for each app.
         """
-        for app in self._iterate_collection(self._apps_list, "apps"):
+        for app in self.iterate_collection(self._apps_list, "apps"):
             if isinstance(app, App):
                 yield app
 
@@ -106,7 +107,7 @@ class AppsApi(DoApi):
         app_id
             The app ID.
         """
-        return self._iterate_collection(
+        return self.iterate_collection(
             partial(self._app_deployments_list, app_id), "deployments"
         )
 

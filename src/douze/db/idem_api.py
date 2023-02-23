@@ -11,21 +11,23 @@ from httpx import Client
 
 from douze.idem_api import DoIdemApi, IdemApiError, Outcome
 
+from ..api import DoApi
 from ..models import EntryState
 from ..types import Uuid
 from .models import *
 
 
 class DatabaseIdemApi(DoIdemApi):
-    DEFAULT_PSQL_VERSION = PostgreSqlVersion.v14
-    DEFAULT_REDIS_VERSION = RedisVersion.v7
-    DEFAULT_MYSQL_VERSION = MySqlVersion.v8
-    DEFAULT_MONGO_VERSION = MongoVersion.v4
+    DEFAULT_PSQL_VERSION = PostgreSqlVersion.latest()
+    DEFAULT_REDIS_VERSION = RedisVersion.latest()
+    DEFAULT_MYSQL_VERSION = MySqlVersion.latest()
+    DEFAULT_MONGO_VERSION = MongoVersion.latest()
     PROVISION_TIMEOUT = 60 * 30
     PROVISION_POLL = 5
 
-    def __init__(self, root_api: DoIdemApi):
-        super().__init__(root_api.api)
+    def __init__(self, root: DoApi):
+        super().__init__(root)
+        self._cluster_cache = {}
 
     def _find_cluster_by_name(self, name) -> Optional[DatabaseCluster]:
         """
