@@ -1,4 +1,4 @@
-from typing import Iterator, List, Text, Union
+from typing import Iterator, List, Text, Union, Optional
 
 from typefit import api
 
@@ -101,6 +101,14 @@ class DatabaseApi(DoApiMixin):
         """
         Creates a user within a cluster
         """
+
+    def user_get(self, cluster_id: Text, user_name: Text) -> Optional[DatabaseUser]:
+        """
+        Retrieves a database user within this cluster
+        """
+        for candidate in self.user_list(cluster_id):
+            if candidate.name == user_name:
+                return candidate
 
     @api.delete("databases/{cluster_id}/users/{user_name}")
     def user_delete(self, cluster_id: Text, user_name: Text) -> None:

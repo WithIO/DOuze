@@ -368,12 +368,8 @@ class DatabaseIdemApi(DoIdemApi):
         absent = state == "absent"
         present = state == "present"
 
-        for candidate in self.api.db.user_list(cluster.id):
-            if candidate.name == user_name:
-                user = candidate
-                break
-
-        if not user:
+        user = self.api.db.user_get(cluster_id=cluster.id, user_name=user_name)
+        if user is None:
             if absent:
                 return Outcome(False)
 

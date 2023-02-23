@@ -136,7 +136,7 @@ class DatabaseCluster:
     maintenance_window: Optional["DatabaseMaintenanceWindow"] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatabaseClusterCreate:
     name: Text
     engine: DatabaseEngine
@@ -148,7 +148,7 @@ class DatabaseClusterCreate:
     private_network_uuid: Optional[Uuid] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatabaseMaintenanceWindow:
     day: Day
     hour: Text
@@ -156,69 +156,25 @@ class DatabaseMaintenanceWindow:
     description: List[Text] = field(default_factory=list)
 
 
-@dataclass
-class DatabaseConnection:
-    database: Text
-    host: Text
-    port: int
-    user: Text
-    password: Text
-    ssl: bool
-
-    @property
-    def uri(self) -> Text:
-        return (
-            f"postgresql://{quote(self.user)}:{quote(self.password)}"
-            f"@{quote(self.host)}:{quote(str(self.port))}"
-            f"/{quote(self.database)}"
-            f'{"?sslmode=require" if self.ssl else ""}'
-        )
-
-    @property
-    def pg_env(self):
-        return {
-            "PGPASSWORD": self.password,
-            **({"PGSSLMODE": "require"} if self.ssl else {}),
-        }
-
-    def pg_flags(self, database: Text = ""):
-        if not database:
-            database = self.database
-
-        return [
-            f"{x}"
-            for x in [
-                "-U",
-                self.user,
-                "-h",
-                self.host,
-                "-p",
-                self.port,
-                "-d",
-                database,
-            ]
-        ]
-
-
-@dataclass
+@dataclass(frozen=True)
 class DatabaseUserCreate:
     name: Text
     mysql_settings: Optional["MySqlSettings"] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class DatabaseUser(DatabaseUserCreate):
     name: Text = ""
     role: DatabaseUserRole = DatabaseUserRole.normal
     password: Text = ""
 
 
-@dataclass
+@dataclass(frozen=True)
 class MySqlSettings:
     auth_plugin: MySqlAuthPlugin
 
 
-@dataclass
+@dataclass(frozen=True)
 class Database:
     name: Text
 
@@ -236,6 +192,74 @@ class DatabaseFirewallRule(DatabaseFirewallRuleCreate):
     cluster_uuid: Text
 
 
+@dataclass(frozen=True)
+class DatabaseConnection:
+    database: Text
+    host: Text
+    port: int
+    user: Text
+    password: Text
+    ssl: bool
+
+
+@dataclass(frozen=True)
+class PgConnection(DatabaseConnection):
+
+    @property
+    def uri(self) -> Text:
+        return (
+            f"postgresql://{quote(self.user)}:{quote(self.password)}"
+            f"@{quote(self.host)}:{quote(Text(self.port))}"
+            f"/{quote(self.database)}"
+            f'{"?sslmode=require" if self.ssl else ""}'
+        )
+
+    @property
+    def env(self):
+        return {
+            "PGPASSWORD": self.password,
+            **({"PGSSLMODE": "require"} if self.ssl else {}),
+        }
+
+    pg_env = env  # compat
+
+    def flags(self, database: Text = ""):
+        if not database:
+            database = self.database
+
+        return [
+            f"{x}"
+            for x in [
+                "-U",
+                self.user,
+                "-h",
+                self.host,
+                "-p",
+                self.port,
+                "-d",
+                database,
+            ]
+        ]
+
+    pg_flags = flags  # compat
+
+
+@dataclass(frozen=True)
+class RedisConnection(DatabaseConnection):
+    @property
+    def uri(self) -> Text:
+        return (
+            f"{'rediss' if self.ssl else 'redis'}"
+            f"://{quote(self.user)}:{quote(self.password)}"
+            f"@{quote(self.host)}:{quote(Text(self.port))}"
+            f"/{quote(self.database)}"
+        )
+
+    @property
+    def env(self):
+        return {}
+
+
 @dataclass
 class DatabaseConnectionPoolCreate:
     name: Text
@@ -247,8 +271,8 @@ class DatabaseConnectionPoolCreate:
 
 @dataclass
 class DatabaseConnectionPool(DatabaseConnectionPoolCreate):
-    connection: DatabaseConnection
-    private_connection: DatabaseConnection
+    connection: PgConnection
+    private_connection: PgConnection
 
 
 @dataclass

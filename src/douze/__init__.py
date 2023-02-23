@@ -39,7 +39,7 @@ class DoApiMixin(api.SyncClient):
         to be a dictionary and the content you're looking for is always going
         to be in a different key that's more or less logic.
 
-        The hint here serves to give the name of that key. By example, if the
+        The hint here serves to give the name of that key. For example, if the
         hint is "droplet" the response is expected to be something like
 
         >>> {
