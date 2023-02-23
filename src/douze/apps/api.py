@@ -2,7 +2,7 @@ from functools import partial
 from typing import Any, Callable, Iterator, Optional, Text
 
 from typefit import api
-from typefit.api import Headers as hm
+from typefit import httpx_models as hm
 
 from .. import DoApiMixin
 from ..api import DoApi
