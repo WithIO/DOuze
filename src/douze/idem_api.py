@@ -59,6 +59,12 @@ class DoIdemApi:
         return DropletIdemApi(self.api)
 
     @cached_property
+    def registry(self):
+        from .registry.idem_api import RegistryIdemApi
+
+        return RegistryIdemApi(self.api)
+
+    @cached_property
     def uptime(self):
         from .uptime.idem_api import UptimeIdemApi
 

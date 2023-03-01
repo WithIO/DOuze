@@ -277,7 +277,7 @@ class DatabaseConnectionPool(DatabaseConnectionPoolCreate):
 
 @dataclass
 class DatabaseClusterCollection(Collection):
-    databases: List[Union[DatabaseCluster, Any]] = field(default_factory=list)
+    databases: List[DatabaseCluster] = field(default_factory=list)
 
 
 @dataclass

@@ -24,10 +24,6 @@ class AppsApi(DoApiMixin):
         Fetches one page of Apps list.
         """
 
-    def on_response(self, request: hm.Request, response: hm.Response) -> None:
-        js = response.json()
-        # print(js["apps"][0]["spec"]["databases"])
-
     def apps_list(self) -> Iterator[App]:
         """
         List all apps on your account. Information about the current

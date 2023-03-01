@@ -362,7 +362,6 @@ class DatabaseIdemApi(DoIdemApi):
         """
 
         cluster = self._find_cluster_by_name(cluster_name)
-        user = None
         changed = False
 
         absent = state == "absent"

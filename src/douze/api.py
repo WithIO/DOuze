@@ -38,6 +38,12 @@ class DoApi:
         return DropletApi(self)
 
     @cached_property
+    def registry(self):
+        from .registry.api import RegistryApi
+
+        return RegistryApi(self)
+
+    @cached_property
     def uptime(self):
         from .uptime.api import ChecksApi
 

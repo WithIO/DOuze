@@ -1,4 +1,4 @@
-from typing import Iterator, List, Text, Union, Optional
+from typing import Iterator, List, Optional, Text, Union
 
 from typefit import api
 
