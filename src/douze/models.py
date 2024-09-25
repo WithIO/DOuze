@@ -68,6 +68,8 @@ class PostgreSqlVersion(Enum):
     v12 = "12"
     v13 = "13"
     v14 = "14"
+    v15 = "15"
+    v16 = "16"
 
 
 class MySqlVersion(Enum):
@@ -77,6 +79,7 @@ class MySqlVersion(Enum):
 class RedisVersion(Enum):
     v5 = "5"
     v6 = "6"
+    v7 = "7"
 
 
 class DatabaseUserRole(Enum):
@@ -130,12 +133,12 @@ class PgBouncerMode(Enum):
 class DatabaseCluster:
     id: Text
     name: Text
-    engine: DatabaseEngine
-    version: Union[PostgreSqlVersion, MySqlVersion, RedisVersion]
+    engine: Union[DatabaseEngine, Text]
+    version: Union[PostgreSqlVersion, MySqlVersion, RedisVersion, Text]
     connection: "DatabaseConnection"
     private_connection: "DatabaseConnection"
     num_nodes: int
-    size: DatabaseSize
+    size: Union[DatabaseSize, Text]
     region: Text
     status: DatabaseStatus
     created_at: DateTime
@@ -149,9 +152,9 @@ class DatabaseCluster:
 @dataclass
 class DatabaseClusterCreate:
     name: Text
-    engine: DatabaseEngine
-    version: Union[PostgreSqlVersion, MySqlVersion, RedisVersion]
-    size: DatabaseSize
+    engine: Union[DatabaseEngine, Text]
+    version: Union[PostgreSqlVersion, MySqlVersion, RedisVersion, Text]
+    size: Union[DatabaseSize, Text]
     region: Text
     num_nodes: int
     tags: List[Text] = field(default_factory=list)
